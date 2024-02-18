@@ -161,5 +161,6 @@ public class PlayState extends State {
     public void dispose() {
         AssetsTerry.dispose();
         oWorld.dispose();
+        renderer.dispose();
     }
 }

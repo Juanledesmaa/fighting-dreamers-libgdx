@@ -42,6 +42,6 @@ public class SplashState extends State {
 
     @Override
     public void dispose() {
-
+   	 img.dispose();
     }
 }
