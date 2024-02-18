@@ -10,6 +10,8 @@ import com.mygdx.game.States.GameStateManager;
 import com.mygdx.game.States.MenuState;
 import com.mygdx.game.States.SplashState;
 
+import static com.mygdx.game.Global.*;
+
 public class MyGdxGame extends ApplicationAdapter {
 
 	// Public Properties
@@ -20,7 +22,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
 	// Private Properties
 	private GameStateManager gsm;
-	private SpriteBatch batch;
 	
 	@Override
 	public void create () {

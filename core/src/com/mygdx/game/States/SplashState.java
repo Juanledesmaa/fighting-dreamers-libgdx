@@ -5,16 +5,17 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import static com.mygdx.game.Global.*;
+
 public class SplashState extends State {
 
     Texture img;
 
     // Private Properties
 //    private GameStateManager gsm;
-    private final SpriteBatch batch;
+
     public SplashState(GameStateManager gsm) {
         super(gsm);
-        batch = new SpriteBatch();
         img = new Texture("sami_splash.png");
     }
 
