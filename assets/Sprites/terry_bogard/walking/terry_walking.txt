@@ -1,0 +1,40 @@
+terry_walking.png
+size: 128, 1152
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Terry Bogard
+  rotate: false
+  xy: 0, 0
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 4
+Terry Bogard
+  rotate: false
+  xy: 0, 224
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 5
+Terry Bogard
+  rotate: false
+  xy: 0, 448
+  size: 128, 256
+  orig: 128, 256
+  offset: 0, 0
+  index: 6
+Terry Bogard
+  rotate: false
+  xy: 0, 704
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 7
+Terry Bogard
+  rotate: false
+  xy: 0, 928
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 8

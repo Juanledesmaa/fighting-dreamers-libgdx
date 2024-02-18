@@ -1,0 +1,12 @@
+terry_idle_single.png
+size: 128, 224
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Terry Bogard
+  rotate: false
+  xy: 0, 0
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 0

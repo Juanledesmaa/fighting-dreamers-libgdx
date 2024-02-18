@@ -1,0 +1,33 @@
+terry_idle.png
+size: 128, 896
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Terry Bogard
+  rotate: false
+  xy: 0, 0
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 0
+Terry Bogard
+  rotate: false
+  xy: 0, 224
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 1
+Terry Bogard
+  rotate: false
+  xy: 0, 448
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 2
+Terry Bogard
+  rotate: false
+  xy: 0, 672
+  size: 128, 224
+  orig: 128, 224
+  offset: 0, 0
+  index: 3
