@@ -129,7 +129,7 @@ public class PlayState extends State {
 //            keyframe = AssetsLearn8.fall;
         } else if (terry.isWalking) {
             // TODO: Learn which call for sprite animations
-//            keyframe = AssetsTerry.walk.getKeyFrame(robot.stateTime, true);
+            keyframe = AssetsTerry.walkingAnimation.getKeyFrame(terry.stateTime);
         } else if (terry.isDucking) {
             // TODO: Add the proper ASSETS
 //            keyframe = AssetsLearn8.duck;
