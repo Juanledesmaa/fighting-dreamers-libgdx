@@ -14,6 +14,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.Player.Player;
+import com.mygdx.game.Player.State;
 
 public class Example extends ApplicationAdapter {
 	static final float worldWidth = 1600, worldHeight = 900;
@@ -114,74 +116,6 @@ public class Example extends ApplicationAdapter {
 
 	static class GameState {
 		Player player = new Player();
-	}
-
-	static class Player {
-		static final float width = 100;
-		static final float height = 300;
-		static final float walkSpeed = 650;
-		static final float gravity = 650;
-		static final float jumpVelocityX = 450;
-		static final float jumpVelocityY = 700;
-
-		Vector2 position = new Vector2(200, 0);
-		Vector2 velocity = new Vector2();
-		int dir = 1;
-		State state = State.idle;
-
-		public void update (float delta) {
-			if (state.ground()) {
-				if (state == State.walk) position.x += walkSpeed * delta * dir;
-			} else {
-				if (velocity.y < 0 && state == State.jumpUp && state != State.jumpFall) state = State.jumpFall;
-				velocity.y -= gravity * delta;
-				collideX(delta);
-				collideY(delta);
-				position.add(velocity.x * delta, velocity.y * delta);
-			}
-
-			position.x = Math.max(position.x, width / 2);
-			position.x = Math.min(position.x, worldWidth - width / 2);
-		}
-
-		void collideX (float delta) {
-			float x = position.x + velocity.x * delta, y = position.y;
-			if (velocity.x > 0) {
-				if (x > worldWidth - width / 2) {
-					velocity.x = 0;
-					position.x = worldWidth - width / 2;
-				}
-			} else {
-				if (x < width / 2) {
-					velocity.x = 0;
-					position.x = width / 2;
-				}
-			}
-		}
-
-		void collideY (float delta) {
-			float x = position.x, y = position.y + velocity.y * delta;
-			if (velocity.y > 0) {
-				// Moving up, collide above (with other player).
-			} else if (y < 0) {
-				// Landed.
-				velocity.set(0, 0);
-				position.y = 0;
-				state = State.idle;
-			}
-		}
-	}
-
-	static enum State {
-		idle, walk, jumpUp, jumpFall;
-
-		boolean ground () {
-			return this == idle || this == walk;
-		}
-
-		boolean air () {
-			return !ground();
-		}
 	}
 
 	static public void main (String[] arg) {
