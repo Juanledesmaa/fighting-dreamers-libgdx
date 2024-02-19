@@ -19,7 +19,7 @@ import com.mygdx.game.Assets.AssetsTerry;
 import com.mygdx.game.Characters.Terry;
 import com.mygdx.game.MyGdxGame;
 
-import org.w3c.dom.Text;
+import static com.mygdx.game.Global.*;
 
 public class PlayState extends State {
 
@@ -33,10 +33,8 @@ public class PlayState extends State {
 
     Box2DDebugRenderer renderer;
 
-    SpriteBatch spriteBatch;
     public PlayState(GameStateManager gsm) {
         super(gsm);
-        spriteBatch = new SpriteBatch();
         AssetsTerry.load();
 
         Vector2 gravity = new Vector2(0, 0);
@@ -146,22 +144,23 @@ public class PlayState extends State {
             keyframe.setSize(Terry.DRAW_WIDTH, Terry.DRAW_HEIGHT);
         }
 
-        keyframe.draw(spriteBatch);
+        keyframe.draw(batch);
     }
 
     @Override
     public void render(SpriteBatch sb) {
 
-        spriteBatch.begin();
+        batch.begin();
 
         drawTerry();
 
-        spriteBatch.end();
+        batch.end();
     }
 
     @Override
     public void dispose() {
         AssetsTerry.dispose();
         oWorld.dispose();
+        renderer.dispose();
     }
 }
