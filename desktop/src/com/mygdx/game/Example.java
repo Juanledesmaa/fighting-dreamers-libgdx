@@ -115,7 +115,7 @@ public class Example extends ApplicationAdapter {
 	}
 
 	static class GameState {
-		Player player = new Player();
+		Player player = new Player(new Vector2(200, 0));
 	}
 
 	static public void main (String[] arg) {

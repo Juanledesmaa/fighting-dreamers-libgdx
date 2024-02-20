@@ -1,0 +1,12 @@
+jump_up.png
+size: 96, 256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Terry Bogard
+  rotate: false
+  xy: 0, 0
+  size: 96, 256
+  orig: 96, 256
+  offset: 0, 0
+  index: 18

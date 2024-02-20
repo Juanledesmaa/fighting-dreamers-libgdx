@@ -10,17 +10,12 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -34,27 +29,28 @@ public class ExampleTerry extends ApplicationAdapter {
 	static final float worldWidth = 1600, worldHeight = 900;
 
 	Viewport viewport = new FitViewport(worldWidth, worldHeight);
-	ShapeRenderer shapes;
+	ShapeRenderer shapeRenderer;
 
 	GameState gameState = new GameState();
 
 	Terry terry;
-
-	World oWorld;
-
 	Array<Body> arrBodies;
 
-	Box2DDebugRenderer renderer;
+	Texture img;
+
+	private float stateTime;
+
 
 	public void create () {
 		AssetsTerry.load();
-		shapes = new ShapeRenderer();
+		img = new Texture("Backgrounds/stages/figher_background.jpg");
+		shapeRenderer = new ShapeRenderer();
 		batch = new SpriteBatch();
+		stateTime = 0f;
 
 		Vector2 gravity = new Vector2(0, 0);
-		oWorld = new World(gravity, true);
+
 		arrBodies = new Array<>();
-		renderer = new Box2DDebugRenderer();
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyDown (int key) {
@@ -86,7 +82,8 @@ public class ExampleTerry extends ApplicationAdapter {
 	}
 
 	public void render () {
-		batch.begin();
+		// Update the animation state
+		stateTime += Gdx.graphics.getDeltaTime();
 		float delta = Gdx.graphics.getDeltaTime();
 
 		if (Gdx.input.isKeyPressed(Keys.LEFT)) {
@@ -110,69 +107,71 @@ public class ExampleTerry extends ApplicationAdapter {
 
 		gameState.player.update(delta);
 
-		oWorld.step(delta, 8, 6);
-		oWorld.getBodies(arrBodies);
-
 		ScreenUtils.clear(Color.BLACK);
-		shapes.begin(ShapeType.Filled);
-		shapes.setColor(Color.DARK_GRAY);
-		shapes.rect(0, 0, worldWidth, worldHeight);
+		batch.begin();
+		batch.draw(img, 0, 0);
 		drawPlayer(gameState.player);
-		shapes.end();
 		batch.end();
+
+		drawShape(gameState.enemyPlayer);
 	}
 
 	void drawPlayer (Player player) {
 		float x = player.position.x, y = player.position.y, dir = player.dir;
 		State state = player.state;
 
-		Sprite keyframe = AssetsTerry.idle;
+		Sprite keyframe = switch (state) {
+			case idle -> AssetsTerry.idleAnimation.getKeyFrame(stateTime);
+			case walk -> AssetsTerry.walkingAnimation.getKeyFrame(stateTime);
+			case jumpUp -> AssetsTerry.jumpUp;
+			case jumpFall -> AssetsTerry.falling;
+			default -> AssetsTerry.idle;
+		};
 
-		switch (state) {
-			case idle:
-				keyframe = AssetsTerry.idle;
-				break;
-			case walk:
-				keyframe = AssetsTerry.walkingAnimation.getKeyFrame(0);
-				break;
-			case jumpUp:
-				break;
-			case jumpFall:
-				break;
-		}
+		keyframe.setPosition(x - Terry.DRAW_WIDTH / 2, y / 2 + .25f);
+		keyframe.setSize(Terry.DRAW_WIDTH, Terry.DRAW_HEIGHT);
+		keyframe.setFlip(dir > -1, false);
 
 		keyframe.draw(batch);
 	}
 
-	private void createTerry() {
+	void drawShape (Player player) {
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		float x = player.position.x, y = player.position.y, dir = player.dir;
+		State state = player.state;
+
+		// Body.
+		shapeRenderer.setColor(Color.RED);
+		shapeRenderer.rect(x - Player.width / 2, y, Player.width, Player.height);
+
+		// Face.
+		shapeRenderer.setColor(Color.GREEN);
+		shapeRenderer.rect(x + 20 * dir, y + 275, 10 * dir, -10);
+
+		// Arm.
+		shapeRenderer.setColor(Color.WHITE);
+		switch (state) {
+			case idle -> shapeRenderer.rect(x - 30 * dir, y + 200, 30 * dir, -100);
+			case walk -> shapeRenderer.rect(x - 10 * dir, y + 200, 100 * dir, 30);
+			case jumpUp -> shapeRenderer.rect(x - 30 * dir, y + 250, 30 * dir, 100);
+			case jumpFall -> shapeRenderer.rect(x - 30 * dir, y + 230, 30 * dir, -30);
+		}
+
+		shapeRenderer.end();
+	}
+
+	private void createTerry () {
 		terry = new Terry(40, 50);
-		BodyDef bd = new BodyDef();
-		bd.position.x = terry.position.x;
-		bd.position.y = terry.position.y;
-		bd.type = BodyDef.BodyType.DynamicBody;
-
-		PolygonShape shape = new PolygonShape();
-		shape.setAsBox(Terry.WIDTH, Terry.HEIGHT);
-
-		FixtureDef fixDef = new FixtureDef();
-		fixDef.shape = shape;
-		fixDef.restitution = 0;
-		fixDef.density = 15;
-
-		Body oBody = oWorld.createBody(bd);
-		oBody.createFixture(fixDef);
-		oBody.setUserData(terry);
-
-		shape.dispose();
 	}
 
 	public void resize (int width, int height) {
 		viewport.update(width, height, true);
-		shapes.setProjectionMatrix(viewport.getCamera().combined);
+		shapeRenderer.setProjectionMatrix(viewport.getCamera().combined);
 	}
 
 	static class GameState {
-		Player player = new Player();
+		Player player = new Player(new Vector2(200, 0));
+		Player enemyPlayer = new Player(new Vector2(worldWidth - Player.width, 0));
 	}
 
 	static public void main (String[] arg) {

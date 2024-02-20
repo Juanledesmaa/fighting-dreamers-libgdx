@@ -1,0 +1,12 @@
+falling.png
+size: 128, 288
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Terry Bogard
+  rotate: false
+  xy: 0, 0
+  size: 128, 288
+  orig: 128, 288
+  offset: 0, 0
+  index: 21
