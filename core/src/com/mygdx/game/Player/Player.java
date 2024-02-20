@@ -7,22 +7,28 @@ public class Player {
     public static final float worldWidth = 1600;
     public static final float width = 100;
     public static final float height = 300;
-    public static final float walkSpeed = 650;
-    public static final float gravity = 1650;
+    public static final float walkSpeed = 450;
+    public static final float gravity = 980;
     public static final float jumpVelocityX = 450;
-    public static final float jumpVelocityY = 700;
+    public static final float jumpVelocityY = 950;
 
-    public Vector2 position = new Vector2(200, 0);
+    public Vector2 position;
     public Vector2 velocity = new Vector2();
     public int dir = 1;
     public State state = State.idle;
+
+    // Constructor
+    public Player(Vector2 position) {
+        this.position = position;
+    }
 
     public void update (float delta) {
         if (state.ground()) {
             if (state == State.walk) position.x += walkSpeed * delta * dir;
         } else {
             if (velocity.y < 0 && state == State.jumpUp && state != State.jumpFall) state = State.jumpFall;
-            velocity.y -= gravity * delta;
+            velocity.y -= (gravity * delta); // Increase gravity factor as needed
+
             collideX(delta);
             collideY(delta);
             position.add(velocity.x * delta, velocity.y * delta);
