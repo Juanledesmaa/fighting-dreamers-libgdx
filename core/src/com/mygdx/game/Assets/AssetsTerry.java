@@ -13,11 +13,14 @@ public class AssetsTerry {
     public static TextureAtlas idleSingleAtlas;
     public static TextureAtlas jumpUpAtlas;
     public static TextureAtlas fallingAtlas;
+    // Punches
+    public static TextureAtlas lightPunch1Atlas;
     public static Sprite idle;
     public static Sprite jumpUp;
     public static Sprite falling;
     public static Animation<Sprite> idleAnimation;
     public static Animation<Sprite> walkingAnimation;
+    public static Animation<Sprite> lightPunch1Animation;
 
     public static void load() {
         // Idle
@@ -40,6 +43,10 @@ public class AssetsTerry {
         fallingAtlas = new TextureAtlas(Gdx.files.internal("Sprites/terry_bogard/falling/falling.txt"));
         falling = fallingAtlas.createSprite("Terry Bogard");
 
+        // Punches
+        lightPunch1Atlas = new TextureAtlas(Gdx.files.internal("Sprites/terry_bogard/punch/punch.atlas"));
+        lightPunch1Animation = new Animation<Sprite>(Terry.FRAME_DURATION, lightPunch1Atlas.createSprites("Terry Bogard"), Animation.PlayMode.LOOP);
+
     }
 
     public static void dispose() {
@@ -48,5 +55,6 @@ public class AssetsTerry {
         idleSingleAtlas.dispose();
         jumpUpAtlas.dispose();
         fallingAtlas.dispose();
+        lightPunch1Atlas.dispose();
     }
 }

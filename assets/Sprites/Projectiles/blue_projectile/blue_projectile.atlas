@@ -1,0 +1,34 @@
+
+blue_projectile.png
+size: 392, 58
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+Terry Bogard
+  rotate: false
+  xy: 0, 0
+  size: 96, 54
+  orig: 96, 64
+  offset: 0, 10
+  index: 59
+Terry Bogard
+  rotate: false
+  xy: 98, 0
+  size: 95, 52
+  orig: 96, 64
+  offset: 0, 10
+  index: 60
+Terry Bogard
+  rotate: false
+  xy: 196, 0
+  size: 96, 52
+  orig: 96, 64
+  offset: 0, 12
+  index: 61
+Terry Bogard
+  rotate: false
+  xy: 294, 0
+  size: 96, 56
+  orig: 96, 64
+  offset: 0, 8
+  index: 62
