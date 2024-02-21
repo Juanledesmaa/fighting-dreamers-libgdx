@@ -45,7 +45,7 @@ public class BlueProjectile {
 	public void render (SpriteBatch batch) {
 		Sprite keyframe = AssetsProjectiles.blueProjectileAnimation.getKeyFrame(stateTime, true);
 		keyframe.setPosition(position.x, position.y);
-		keyframe.setSize(BlueProjectile.DRAW_WIDTH * 2, BlueProjectile.DRAW_HEIGHT * 2);
+		keyframe.setScale(2);
 		keyframe.setFlip(dir > -1, false);
 
 		keyframe.draw(batch);

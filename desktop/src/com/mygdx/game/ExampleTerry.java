@@ -72,7 +72,7 @@ public class ExampleTerry extends ApplicationAdapter {
 	}
 
 	private void createTerry () {
-		terry = new Terry(40, 50, 1);
+		terry = new Terry(0, 0, 1);
 	}
 
 	void keyDown (int key) {
@@ -86,6 +86,10 @@ public class ExampleTerry extends ApplicationAdapter {
 		case Keys.RIGHT -> {
 			if (gameState.player.state == State.walk && gameState.player.dir == 1) gameState.player.state = State.idle;
 		}
+
+			case Keys.Q -> {
+				Gdx.app.log("Se ejecuto la ejecutacion", "ejecutada");
+			}
 		}
 	}
 
@@ -121,7 +125,7 @@ public class ExampleTerry extends ApplicationAdapter {
 
 		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
 			if (gameState.player.state.ground()) {
-				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (float) (gameState.player.position.y + Terry.DRAW_HEIGHT/1.6), gameState.player.dir));
+				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (gameState.player.position.y + 200), gameState.player.dir));
 				timeSinceLastBlueProjectile = 0f;
 			}
 		}

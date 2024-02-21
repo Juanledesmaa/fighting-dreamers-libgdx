@@ -80,8 +80,8 @@ public class Terry {
             default -> AssetsTerry.idle;
         };
 
-        keyframe.setPosition(position.x - Terry.DRAW_WIDTH / 2, position.y / 2 + .25f);
-        keyframe.setSize(Terry.DRAW_WIDTH, Terry.DRAW_HEIGHT);
+        keyframe.setPosition(position.x - Terry.DRAW_WIDTH / 2, position.y + 100);
+        keyframe.setScale(2);
         keyframe.setFlip(dir > -1, false);
         keyframe.draw(batch);
     }
