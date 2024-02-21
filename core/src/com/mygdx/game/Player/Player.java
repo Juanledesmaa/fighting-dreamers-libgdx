@@ -1,5 +1,6 @@
 package com.mygdx.game.Player;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
@@ -8,7 +9,7 @@ public class Player {
     public static final float width = 100;
     public static final float height = 300;
     public static final float walkSpeed = 450;
-    public static final float gravity = 980;
+    public static final float gravity = 1680;
     public static final float jumpVelocityX = 450;
     public static final float jumpVelocityY = 950;
 
@@ -27,7 +28,7 @@ public class Player {
             if (state == State.walk) position.x += walkSpeed * delta * dir;
         } else {
             if (velocity.y < 0 && state == State.jumpUp && state != State.jumpFall) state = State.jumpFall;
-            velocity.y -= (gravity * delta); // Increase gravity factor as needed
+            velocity.y -= (gravity * delta * 1.2); // Increase gravity factor as needed
 
             collideX(delta);
             collideY(delta);

@@ -15,15 +15,18 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.mygdx.game.Assets.AssetsProjectiles;
 import com.mygdx.game.Assets.AssetsTerry;
 import com.mygdx.game.Characters.Terry;
 import com.mygdx.game.Player.Player;
 import com.mygdx.game.Player.State;
+import com.mygdx.game.Projectiles.BlueProjectile;
+
+import java.util.ArrayList;
 
 public class ExampleTerry extends ApplicationAdapter {
 	static final float worldWidth = 1600, worldHeight = 900;
@@ -34,7 +37,9 @@ public class ExampleTerry extends ApplicationAdapter {
 	GameState gameState = new GameState();
 
 	Terry terry;
-	Array<Body> arrBodies;
+
+	ArrayList<BlueProjectile> blueProjectiles;
+	private float timeSinceLastBlueProjectile = 0f;
 
 	Texture img;
 
@@ -43,14 +48,15 @@ public class ExampleTerry extends ApplicationAdapter {
 
 	public void create () {
 		AssetsTerry.load();
+		AssetsProjectiles.load();
 		img = new Texture("Backgrounds/stages/figher_background.jpg");
 		shapeRenderer = new ShapeRenderer();
 		batch = new SpriteBatch();
 		stateTime = 0f;
+		blueProjectiles = new ArrayList<>();
+		createTerry();
 
 		Vector2 gravity = new Vector2(0, 0);
-
-		arrBodies = new Array<>();
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyDown (int key) {
@@ -63,8 +69,10 @@ public class ExampleTerry extends ApplicationAdapter {
 				return true;
 			}
 		});
+	}
 
-		createTerry();
+	private void createTerry () {
+		terry = new Terry(40, 50, 1);
 	}
 
 	void keyDown (int key) {
@@ -83,8 +91,9 @@ public class ExampleTerry extends ApplicationAdapter {
 
 	public void render () {
 		// Update the animation state
-		stateTime += Gdx.graphics.getDeltaTime();
 		float delta = Gdx.graphics.getDeltaTime();
+		stateTime += delta;
+		timeSinceLastBlueProjectile += delta;
 
 		if (Gdx.input.isKeyPressed(Keys.LEFT)) {
 			if (gameState.player.state.ground()) {
@@ -107,32 +116,33 @@ public class ExampleTerry extends ApplicationAdapter {
 
 		gameState.player.update(delta);
 
-		ScreenUtils.clear(Color.BLACK);
 		batch.begin();
 		batch.draw(img, 0, 0);
-		drawPlayer(gameState.player);
+
+		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
+			if (gameState.player.state.ground()) {
+				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (float) (gameState.player.position.y + Terry.DRAW_HEIGHT/1.6), gameState.player.dir));
+				timeSinceLastBlueProjectile = 0f;
+			}
+		}
+
+		//Update bullets
+		ArrayList<BlueProjectile> blueProjectilesToRemove = new ArrayList<BlueProjectile>();
+		for (BlueProjectile blueProjectile : blueProjectiles) {
+			blueProjectile.update(delta, stateTime);
+			if (blueProjectile.remove)
+				blueProjectilesToRemove.add(blueProjectile);
+		}
+
+		for (BlueProjectile blueProjectile : blueProjectiles) {
+			blueProjectile.render(batch);
+		}
+
+		terry.update(gameState.player, delta, stateTime);
+		terry.render(batch, gameState.player);
 		batch.end();
 
 		drawShape(gameState.enemyPlayer);
-	}
-
-	void drawPlayer (Player player) {
-		float x = player.position.x, y = player.position.y, dir = player.dir;
-		State state = player.state;
-
-		Sprite keyframe = switch (state) {
-			case idle -> AssetsTerry.idleAnimation.getKeyFrame(stateTime);
-			case walk -> AssetsTerry.walkingAnimation.getKeyFrame(stateTime);
-			case jumpUp -> AssetsTerry.jumpUp;
-			case jumpFall -> AssetsTerry.falling;
-			default -> AssetsTerry.idle;
-		};
-
-		keyframe.setPosition(x - Terry.DRAW_WIDTH / 2, y / 2 + .25f);
-		keyframe.setSize(Terry.DRAW_WIDTH, Terry.DRAW_HEIGHT);
-		keyframe.setFlip(dir > -1, false);
-
-		keyframe.draw(batch);
 	}
 
 	void drawShape (Player player) {
@@ -158,10 +168,6 @@ public class ExampleTerry extends ApplicationAdapter {
 		}
 
 		shapeRenderer.end();
-	}
-
-	private void createTerry () {
-		terry = new Terry(40, 50);
 	}
 
 	public void resize (int width, int height) {
