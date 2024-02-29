@@ -11,12 +11,12 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Assets.AssetsProjectiles;
@@ -25,6 +25,7 @@ import com.mygdx.game.Characters.Terry;
 import com.mygdx.game.Player.Player;
 import com.mygdx.game.Player.State;
 import com.mygdx.game.Projectiles.BlueProjectile;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.ArrayList;
 
@@ -37,14 +38,15 @@ public class ExampleTerry extends ApplicationAdapter {
 	GameState gameState = new GameState();
 
 	Terry terry;
+	Terry enemy;
 
 	ArrayList<BlueProjectile> blueProjectiles;
 	private float timeSinceLastBlueProjectile = 0f;
+	private BitmapFont font;
 
 	Texture img;
 
 	private float stateTime;
-
 
 	public void create () {
 		AssetsTerry.load();
@@ -54,9 +56,10 @@ public class ExampleTerry extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		stateTime = 0f;
 		blueProjectiles = new ArrayList<>();
+		font = new BitmapFont();
 		createTerry();
-
-		Vector2 gravity = new Vector2(0, 0);
+		createEnemy();
+		setUpEnemyGameState();
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyDown (int key) {
@@ -69,10 +72,6 @@ public class ExampleTerry extends ApplicationAdapter {
 				return true;
 			}
 		});
-	}
-
-	private void createTerry () {
-		terry = new Terry(0, 0, 1);
 	}
 
 	void keyDown (int key) {
@@ -88,13 +87,22 @@ public class ExampleTerry extends ApplicationAdapter {
 		}
 
 			case Keys.Q -> {
-				Gdx.app.log("Se ejecuto la ejecutacion", "ejecutada");
+			// TODO: Handle inputs here
+				if (gameState.player.state.ground()) {
+					// Start the punch animation
+					gameState.player.state = State.punch;
+					gameState.player.punchAnimationDuration = 0.5f;
+				}
 			}
 		}
 	}
 
 	public void render () {
 		// Update the animation state
+
+		Rectangle playerBounds = new Rectangle(gameState.player.getX(), gameState.player.getY(), gameState.player.getWidth(), gameState.player.getHeight());
+		Rectangle enemyBounds = new Rectangle(gameState.enemyPlayer.getX(), gameState.enemyPlayer.getY(), gameState.enemyPlayer.getWidth(), gameState.enemyPlayer.getHeight());
+
 		float delta = Gdx.graphics.getDeltaTime();
 		stateTime += delta;
 		timeSinceLastBlueProjectile += delta;
@@ -118,10 +126,15 @@ public class ExampleTerry extends ApplicationAdapter {
 			}
 		}
 
-		gameState.player.update(delta);
+		gameState.player.update(delta, terry.rectangle);
+		gameState.enemyPlayer.update(delta, enemy.rectangle);
 
 		batch.begin();
 		batch.draw(img, 0, 0);
+
+		// Draw text at position (x,y)
+		drawText("Life: " + gameState.player.lifeTotal, 50, 850, Color.WHITE);
+		drawText("Life: " + gameState.enemyPlayer.lifeTotal, worldWidth - 50, 850, Color.WHITE);
 
 		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
 			if (gameState.player.state.ground()) {
@@ -134,6 +147,12 @@ public class ExampleTerry extends ApplicationAdapter {
 		ArrayList<BlueProjectile> blueProjectilesToRemove = new ArrayList<BlueProjectile>();
 		for (BlueProjectile blueProjectile : blueProjectiles) {
 			blueProjectile.update(delta, stateTime);
+			Rectangle projectileBounds = new Rectangle(blueProjectile.getX(), blueProjectile.getY(), blueProjectile.getWidth(), blueProjectile.getHeight());
+
+			if (Intersector.overlaps(projectileBounds, enemyBounds)) {
+				Gdx.app.log("Colosion", "Hubo colision");
+			}
+
 			if (blueProjectile.remove)
 				blueProjectilesToRemove.add(blueProjectile);
 		}
@@ -144,34 +163,25 @@ public class ExampleTerry extends ApplicationAdapter {
 
 		terry.update(gameState.player, delta, stateTime);
 		terry.render(batch, gameState.player);
+
+		enemy.update(gameState.enemyPlayer, delta, stateTime);
+		enemy.render(batch, gameState.enemyPlayer);
+
 		batch.end();
+		float spriteX = terry.position.x - terry.getWidth() / 2;
+		float spriteY = terry.position.y + terry.getHeight() / 2;
+		float spriteWidth = terry.getWidth();
+		float spriteHeight = terry.getHeight();
 
-		drawShape(gameState.enemyPlayer);
-	}
+		renderShape(new Rectangle(spriteX, spriteY, spriteWidth, spriteHeight), Color.RED);
 
-	void drawShape (Player player) {
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		float x = player.position.x, y = player.position.y, dir = player.dir;
-		State state = player.state;
+		float playerSpriteX = gameState.player.position.x - gameState.player.getWidth() / 2;
+		float playerSpriteY = gameState.player.position.y - gameState.player.getHeight() / 2;
+		float playerWidth = gameState.player.getWidth();
+		float playerHeight = gameState.player.getHeight();
 
-		// Body.
-		shapeRenderer.setColor(Color.RED);
-		shapeRenderer.rect(x - Player.width / 2, y, Player.width, Player.height);
-
-		// Face.
-		shapeRenderer.setColor(Color.GREEN);
-		shapeRenderer.rect(x + 20 * dir, y + 275, 10 * dir, -10);
-
-		// Arm.
-		shapeRenderer.setColor(Color.WHITE);
-		switch (state) {
-			case idle -> shapeRenderer.rect(x - 30 * dir, y + 200, 30 * dir, -100);
-			case walk -> shapeRenderer.rect(x - 10 * dir, y + 200, 100 * dir, 30);
-			case jumpUp -> shapeRenderer.rect(x - 30 * dir, y + 250, 30 * dir, 100);
-			case jumpFall -> shapeRenderer.rect(x - 30 * dir, y + 230, 30 * dir, -30);
-		}
-
-		shapeRenderer.end();
+		renderShape(new Rectangle(playerSpriteX, playerSpriteY, playerWidth, playerHeight), Color.BLUE);
+		renderShape(enemyBounds, Color.YELLOW);
 	}
 
 	public void resize (int width, int height) {
@@ -190,5 +200,42 @@ public class ExampleTerry extends ApplicationAdapter {
 		config.setTitle("Example_Terry");
 		config.setWindowedMode(1600, 900);
 		new Lwjgl3Application(new ExampleTerry(), config);
+	}
+
+	// Private Methods
+
+	private void createTerry () {
+		terry = new Terry(0, 0, 1);
+	}
+
+	private void createEnemy () {
+		enemy = new Terry(0, 0, -1);
+	}
+
+	private void drawText(String text, float x, float y, Color color) {
+		font.setColor(color);
+		font.getData().setScale(2);
+		GlyphLayout layout = new GlyphLayout(font, text);
+		float textWidth = layout.width;
+		float adjustedX = x;
+		if (x + textWidth >= worldWidth) {
+			adjustedX = x - textWidth;
+		}
+		font.draw(batch, text, adjustedX, y);
+	}
+
+	private void setUpEnemyGameState () {
+		gameState.enemyPlayer.state = State.idle;
+		gameState.enemyPlayer.setTintColor(Color.BLUE);
+		gameState.enemyPlayer.dir = -1;
+	}
+
+	// FOR TEST PURPOSES ONLY
+	private void renderShape(Rectangle rectangle, Color color) {
+		ShapeRenderer shapeRenderer = new ShapeRenderer();
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(color);
+		shapeRenderer.rect(rectangle.x, rectangle.y, rectangle.getWidth(), rectangle.getHeight());
+		shapeRenderer.end();
 	}
 }

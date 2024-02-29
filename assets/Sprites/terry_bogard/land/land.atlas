@@ -1,0 +1,7 @@
+land.png
+	size: 94, 154
+	repeat: none
+Terry_Bogard
+	index: 1
+	bounds: 0, 0, 94, 154
+	offsets: 2, 4, 96, 160
