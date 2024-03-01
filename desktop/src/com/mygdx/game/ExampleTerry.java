@@ -26,27 +26,25 @@ import com.mygdx.game.Player.Player;
 import com.mygdx.game.Player.State;
 import com.mygdx.game.Projectiles.BlueProjectile;
 import com.badlogic.gdx.math.Rectangle;
+import com.mygdx.game.sound.GeneralSounds;
 
 import java.util.ArrayList;
 
 public class ExampleTerry extends ApplicationAdapter {
 	static final float worldWidth = 1600, worldHeight = 900;
-
 	Viewport viewport = new FitViewport(worldWidth, worldHeight);
 	ShapeRenderer shapeRenderer;
-
 	GameState gameState = new GameState();
-
 	Terry terry;
 	Terry enemy;
-
+	Texture img;
 	ArrayList<BlueProjectile> blueProjectiles;
 	private float timeSinceLastBlueProjectile = 0f;
 	private BitmapFont font;
 
-	Texture img;
-
 	private float stateTime;
+
+	private boolean batchEnded;
 
 	public void create () {
 		AssetsTerry.load();
@@ -91,17 +89,15 @@ public class ExampleTerry extends ApplicationAdapter {
 				if (gameState.player.state.ground()) {
 					// Start the punch animation
 					gameState.player.state = State.punch;
-					gameState.player.punchAnimationDuration = 0.5f;
+					gameState.player.punchAnimationDuration = 0.15f;
+
 				}
 			}
 		}
 	}
 
 	public void render () {
-		// Update the animation state
-
-		Rectangle playerBounds = new Rectangle(gameState.player.getX(), gameState.player.getY(), gameState.player.getWidth(), gameState.player.getHeight());
-		Rectangle enemyBounds = new Rectangle(gameState.enemyPlayer.getX(), gameState.enemyPlayer.getY(), gameState.enemyPlayer.getWidth(), gameState.enemyPlayer.getHeight());
+		Rectangle projectileBounds = null;
 
 		float delta = Gdx.graphics.getDeltaTime();
 		stateTime += delta;
@@ -126,8 +122,8 @@ public class ExampleTerry extends ApplicationAdapter {
 			}
 		}
 
-		gameState.player.update(delta, terry.rectangle);
-		gameState.enemyPlayer.update(delta, enemy.rectangle);
+		gameState.player.update(delta, terry.getAccurateRectangle());
+		gameState.enemyPlayer.update(delta, enemy.getAccurateRectangle());
 
 		batch.begin();
 		batch.draw(img, 0, 0);
@@ -136,30 +132,8 @@ public class ExampleTerry extends ApplicationAdapter {
 		drawText("Life: " + gameState.player.lifeTotal, 50, 850, Color.WHITE);
 		drawText("Life: " + gameState.enemyPlayer.lifeTotal, worldWidth - 50, 850, Color.WHITE);
 
-		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
-			if (gameState.player.state.ground()) {
-				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (gameState.player.position.y + 200), gameState.player.dir));
-				timeSinceLastBlueProjectile = 0f;
-			}
-		}
-
-		//Update bullets
-		ArrayList<BlueProjectile> blueProjectilesToRemove = new ArrayList<BlueProjectile>();
-		for (BlueProjectile blueProjectile : blueProjectiles) {
-			blueProjectile.update(delta, stateTime);
-			Rectangle projectileBounds = new Rectangle(blueProjectile.getX(), blueProjectile.getY(), blueProjectile.getWidth(), blueProjectile.getHeight());
-
-			if (Intersector.overlaps(projectileBounds, enemyBounds)) {
-				Gdx.app.log("Colosion", "Hubo colision");
-			}
-
-			if (blueProjectile.remove)
-				blueProjectilesToRemove.add(blueProjectile);
-		}
-
-		for (BlueProjectile blueProjectile : blueProjectiles) {
-			blueProjectile.render(batch);
-		}
+		drawProjectile(delta);
+		handlePunchCollision();
 
 		terry.update(gameState.player, delta, stateTime);
 		terry.render(batch, gameState.player);
@@ -167,21 +141,13 @@ public class ExampleTerry extends ApplicationAdapter {
 		enemy.update(gameState.enemyPlayer, delta, stateTime);
 		enemy.render(batch, gameState.enemyPlayer);
 
+
+
 		batch.end();
-		float spriteX = terry.position.x - terry.getWidth() / 2;
-		float spriteY = terry.position.y + terry.getHeight() / 2;
-		float spriteWidth = terry.getWidth();
-		float spriteHeight = terry.getHeight();
 
-		renderShape(new Rectangle(spriteX, spriteY, spriteWidth, spriteHeight), Color.RED);
-
-		float playerSpriteX = gameState.player.position.x - gameState.player.getWidth() / 2;
-		float playerSpriteY = gameState.player.position.y - gameState.player.getHeight() / 2;
-		float playerWidth = gameState.player.getWidth();
-		float playerHeight = gameState.player.getHeight();
-
-		renderShape(new Rectangle(playerSpriteX, playerSpriteY, playerWidth, playerHeight), Color.BLUE);
-		renderShape(enemyBounds, Color.YELLOW);
+		// For Tests purposes only.
+		renderShape(gameState.player.rectangle, Color.RED);
+		renderShape(gameState.enemyPlayer.rectangle, Color.BLUE);
 	}
 
 	public void resize (int width, int height) {
@@ -222,6 +188,55 @@ public class ExampleTerry extends ApplicationAdapter {
 			adjustedX = x - textWidth;
 		}
 		font.draw(batch, text, adjustedX, y);
+	}
+	// TODO: Refactor into something more generic
+	private void drawProjectile(float delta) {
+		Rectangle projectileBounds = null;
+		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
+			if (gameState.player.state.ground()) {
+				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (gameState.player.position.y + 200), gameState.player.dir));
+				timeSinceLastBlueProjectile = 0f;
+				GeneralSounds.BLUE_PROJECTILE.play();
+			}
+		}
+
+		ArrayList<BlueProjectile> blueProjectilesToRemove = new ArrayList<BlueProjectile>();
+		for (BlueProjectile blueProjectile : blueProjectiles) {
+			blueProjectile.update(delta, stateTime);
+			projectileBounds = new Rectangle(blueProjectile.getX(), blueProjectile.getY(), blueProjectile.getWidth(), blueProjectile.getHeight());
+
+			if (projectileBounds.overlaps(gameState.enemyPlayer.rectangle)) {
+				gameState.enemyPlayer.lifeTotal = gameState.enemyPlayer.lifeTotal - BlueProjectile.damage;
+				blueProjectile.remove = true;
+				GeneralSounds.SINGLE_HIT_1.play();
+			}
+
+			if (blueProjectile.remove)
+				blueProjectilesToRemove.add(blueProjectile);
+		}
+
+		blueProjectiles.removeAll(blueProjectilesToRemove);
+
+		for (BlueProjectile blueProjectile : blueProjectiles) {
+			blueProjectile.render(batch);
+		}
+	}
+
+	// TODO: Refactor this into a `PunchHandler`
+	private void handlePunchCollision() {
+		// Check for punch collision and ensure it triggers only once
+		if (!gameState.player.didHitPunch && gameState.player.rectangle.overlaps(gameState.enemyPlayer.rectangle)
+				&& gameState.player.state == State.punch) {
+			gameState.enemyPlayer.lifeTotal -= 10;
+			GeneralSounds.SINGLE_HIT_2.play();
+			gameState.player.didHitPunch = true;
+		}
+
+		// Reset the flag if players are no longer in contact or the punch action is completed
+		if (!gameState.player.rectangle.overlaps(gameState.enemyPlayer.rectangle)
+				|| gameState.player.state != State.punch) {
+			gameState.player.didHitPunch = false;
+		}
 	}
 
 	private void setUpEnemyGameState () {

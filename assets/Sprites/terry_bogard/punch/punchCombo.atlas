@@ -1,0 +1,31 @@
+punchCombo.png
+	size: 1316, 226
+	repeat: none
+Terry Bogard
+	index: 1
+	bounds: 0, 0, 126, 224
+	offsets: 20, 0, 160, 224
+Terry Bogard
+	index: 2
+	bounds: 188, 0, 150, 224
+	offsets: 4, 0, 160, 224
+Terry Bogard
+	index: 3
+	bounds: 376, 0, 136, 224
+	offsets: 16, 0, 160, 224
+Terry Bogard
+	index: 4
+	bounds: 564, 0, 171, 224
+	offsets: 12, 0, 192, 224
+Terry Bogard
+	index: 5
+	bounds: 752, 0, 128, 224
+	offsets: 28, 0, 160, 224
+Terry Bogard
+	index: 6
+	bounds: 940, 0, 138, 224
+	offsets: 14, 0, 160, 224
+Terry Bogard
+	index: 7
+	bounds: 1128, 0, 186, 192
+	offsets: 16, 0, 224, 192

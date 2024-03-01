@@ -67,6 +67,7 @@ public class Terry {
                 yield AssetsTerry.land;
             }
             case punch -> AssetsTerry.lightPunch1Animation.getKeyFrame(stateTime);
+//            case punch -> AssetsTerry.punchComboAnimation.getKeyFrame(stateTime);
             default -> AssetsTerry.idle;
         };
 
@@ -74,7 +75,7 @@ public class Terry {
             keyframe.setColor(player.getTintColor()); // Set the tint color for this player
         } else {
             // Reset to default color if no tint color is specified
-            keyframe.setColor(Color.WHITE);
+            keyframe.setColor(Color.SKY);
         }
 
         keyframe.setPosition(position.x - keyframe.getWidth()/2, position.y + keyframe.getHeight()/2);
@@ -92,5 +93,13 @@ public class Terry {
 
     public float getHeight() {
         return  rectangle.getHeight();
+    }
+
+    public Rectangle getAccurateRectangle() {
+        float spriteX = position.x - getWidth() / 2;
+        float spriteY = position.y + getHeight() / 2;
+        float spriteWidth = getWidth();
+        float spriteHeight = getHeight();
+        return new Rectangle(spriteX, spriteY, spriteWidth, spriteHeight);
     }
 }

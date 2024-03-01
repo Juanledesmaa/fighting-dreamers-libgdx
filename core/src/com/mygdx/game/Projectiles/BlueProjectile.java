@@ -18,6 +18,8 @@ public class BlueProjectile {
 	public static float COOLDOWN = 0.5f; // Set your desired cooldown time in seconds
 	public float stateTime = 0;
 
+	public static float damage = 20f;
+
 	public boolean remove = false;
 
 	public Vector2 position;
@@ -55,7 +57,7 @@ public class BlueProjectile {
 	public void render (SpriteBatch batch) {
 		Sprite keyframe = AssetsProjectiles.blueProjectileAnimation.getKeyFrame(stateTime, true);
 		keyframe.setPosition(position.x, position.y);
-		keyframe.setScale(2);
+		keyframe.setScale(1);
 		rectangle = new Rectangle(getX(), getY(), keyframe.getWidth(), keyframe.getHeight());
 		keyframe.setFlip(dir > -1, false);
 

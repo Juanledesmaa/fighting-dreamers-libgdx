@@ -14,7 +14,7 @@ public class Player {
     public static final float jumpVelocityX = 450;
     public static final float jumpVelocityY = 950;
 
-    public final float lifeTotal = 100;
+    public float lifeTotal = 100;
 
     public Vector2 position;
     public Rectangle rectangle;
@@ -22,7 +22,8 @@ public class Player {
     public int dir = 1;
     public State state = State.idle;
 
-    public float punchAnimationDuration = 0.5f;
+    public float punchAnimationDuration = 0.15f;
+    public boolean didHitPunch = false;
     public float landAnimationDuration = 0.15f;
 
     private Color tintColor = null;
@@ -47,8 +48,9 @@ public class Player {
 
         position.x = Math.max(position.x, width / 2);
         position.x = Math.min(position.x, worldWidth - width / 2);
+
         if (boundingRectangle != null) {
-            rectangle = new Rectangle(getX(), getY(), boundingRectangle.getWidth(), boundingRectangle.getHeight());
+            rectangle = new Rectangle(boundingRectangle.getX(), boundingRectangle.getY(), boundingRectangle.getWidth(), boundingRectangle.getHeight());
         }
     }
 
