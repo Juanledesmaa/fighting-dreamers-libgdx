@@ -6,13 +6,14 @@ import com.badlogic.gdx.audio.Sound;
 
 public enum GeneralSounds {
 
+	BACKGROUND_MUSIC("Music/Calling.mp3"),
 	BLUE_PROJECTILE("Sounds/Projectile/CD_00150.wav"),
 	SINGLE_HIT_1("Sounds/Hit/single_1.wav"),
 	SINGLE_HIT_2("Sounds/Hit/single_2.wav"),
 	SINGLE_HIT_3("Sounds/Hit/single_3.wav");
 
-
 	final static float VOLUME = 0.2f;
+	final static float VOLUME_MUSIC = 0.1f;
 
 	private final Sound sound;
 
@@ -22,9 +23,14 @@ public enum GeneralSounds {
 	}
 
 	// Method to play the sound
-	public void play() {
+	public void play(boolean loop) {
 		long id = sound.play(VOLUME);
-		sound.setLooping(id, false);
+		sound.setLooping(id, loop);
+	}
+
+	public void playMusic(boolean loop) {
+		long id = sound.play(VOLUME_MUSIC);
+		sound.setLooping(id, loop);
 	}
 
 	// Method to dispose of the sound when it's no longer needed
