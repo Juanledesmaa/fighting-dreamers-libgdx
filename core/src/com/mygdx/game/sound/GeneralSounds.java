@@ -3,43 +3,58 @@ package com.mygdx.game.sound;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.ObjectMap;
 
 public enum GeneralSounds {
-
 	BACKGROUND_MUSIC("Music/Calling.mp3"),
 	BLUE_PROJECTILE("Sounds/Projectile/CD_00150.wav"),
 	SINGLE_HIT_1("Sounds/Hit/single_1.wav"),
 	SINGLE_HIT_2("Sounds/Hit/single_2.wav"),
 	SINGLE_HIT_3("Sounds/Hit/single_3.wav");
 
-	final static float VOLUME = 0.2f;
-	final static float VOLUME_MUSIC = 0.1f;
+	private static final float VOLUME = 0.2f;
+	private static final float VOLUME_MUSIC = 0.1f;
+	private static final ObjectMap<GeneralSounds, Sound> soundMap = new ObjectMap<>();
 
-	private final Sound sound;
+	private final String path;
 
-	// Define a constructor to initialize each enum constant with its corresponding sound file
+	// Constructor
 	GeneralSounds(String path) {
-		this.sound = Gdx.audio.newSound(Gdx.files.internal(path));
+		this.path = path;
 	}
 
-	// Method to play the sound
+	public static void initializeSounds() {
+		for (GeneralSounds sound : GeneralSounds.values()) {
+			String path = sound.getPath();
+			Sound loadedSound = Gdx.audio.newSound(Gdx.files.internal(path));
+			soundMap.put(sound, loadedSound);
+		}
+	}
+
 	public void play(boolean loop) {
-		long id = sound.play(VOLUME);
-		sound.setLooping(id, loop);
+		Sound sound = soundMap.get(this);
+		if (sound != null) {
+			long id = sound.play(VOLUME);
+			sound.setLooping(id, loop);
+		}
 	}
 
 	public void playMusic(boolean loop) {
-		long id = sound.play(VOLUME_MUSIC);
-		sound.setLooping(id, loop);
+		Sound sound = soundMap.get(this);
+		if (sound != null) {
+			long id = sound.play(VOLUME_MUSIC);
+			sound.setLooping(id, loop);
+		}
 	}
 
-	// Method to dispose of the sound when it's no longer needed
 	public void dispose() {
-		sound.dispose();
+		Sound sound = soundMap.get(this);
+		if (sound != null) {
+			sound.dispose();
+		}
 	}
 
-	// Example method to stop the sound
-	public void stop() {
-		sound.stop();
+	public String getPath() {
+		return path;
 	}
 }
