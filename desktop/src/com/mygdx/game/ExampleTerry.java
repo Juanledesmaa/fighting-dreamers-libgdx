@@ -11,12 +11,12 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.mygdx.game.Assets.AssetsProjectiles;
@@ -25,26 +25,25 @@ import com.mygdx.game.Characters.Terry;
 import com.mygdx.game.Player.Player;
 import com.mygdx.game.Player.State;
 import com.mygdx.game.Projectiles.BlueProjectile;
+import com.badlogic.gdx.math.Rectangle;
+import com.mygdx.game.sound.GeneralSounds;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ExampleTerry extends ApplicationAdapter {
 	static final float worldWidth = 1600, worldHeight = 900;
-
 	Viewport viewport = new FitViewport(worldWidth, worldHeight);
 	ShapeRenderer shapeRenderer;
-
 	GameState gameState = new GameState();
-
 	Terry terry;
-
+	Terry enemy;
+	Texture img;
 	ArrayList<BlueProjectile> blueProjectiles;
 	private float timeSinceLastBlueProjectile = 0f;
-
-	Texture img;
-
+	private BitmapFont font;
 	private float stateTime;
-
+	private GlyphLayout glyphLayout;
 
 	public void create () {
 		AssetsTerry.load();
@@ -54,9 +53,11 @@ public class ExampleTerry extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		stateTime = 0f;
 		blueProjectiles = new ArrayList<>();
+		font = new BitmapFont();
+		setupFont();
 		createTerry();
-
-		Vector2 gravity = new Vector2(0, 0);
+		createEnemy();
+		setUpEnemyGameState();
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyDown (int key) {
@@ -69,10 +70,9 @@ public class ExampleTerry extends ApplicationAdapter {
 				return true;
 			}
 		});
-	}
 
-	private void createTerry () {
-		terry = new Terry(0, 0, 1);
+		GeneralSounds.initializeSounds();
+		GeneralSounds.BACKGROUND_MUSIC.playMusic(true);
 	}
 
 	void keyDown (int key) {
@@ -88,13 +88,18 @@ public class ExampleTerry extends ApplicationAdapter {
 		}
 
 			case Keys.Q -> {
-				Gdx.app.log("Se ejecuto la ejecutacion", "ejecutada");
+			// TODO: Handle inputs here
+				if (gameState.player.state.ground()) {
+					gameState.player.state = State.punch;
+					gameState.player.punchAnimationDuration = 0.15f;
+				}
 			}
 		}
 	}
 
 	public void render () {
-		// Update the animation state
+		Rectangle projectileBounds = null;
+
 		float delta = Gdx.graphics.getDeltaTime();
 		stateTime += delta;
 		timeSinceLastBlueProjectile += delta;
@@ -118,60 +123,30 @@ public class ExampleTerry extends ApplicationAdapter {
 			}
 		}
 
-		gameState.player.update(delta);
+		gameState.player.update(delta, terry.getAccurateRectangle());
+		gameState.enemyPlayer.update(delta, enemy.getAccurateRectangle());
 
 		batch.begin();
 		batch.draw(img, 0, 0);
 
-		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
-			if (gameState.player.state.ground()) {
-				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (gameState.player.position.y + 200), gameState.player.dir));
-				timeSinceLastBlueProjectile = 0f;
-			}
-		}
+		// Draw text at position (x,y)
+		drawText("Life: " + gameState.player.lifeTotal, 50, 850, Color.WHITE);
+		drawText("Life: " + gameState.enemyPlayer.lifeTotal, worldWidth - 50, 850, Color.WHITE);
 
-		//Update bullets
-		ArrayList<BlueProjectile> blueProjectilesToRemove = new ArrayList<BlueProjectile>();
-		for (BlueProjectile blueProjectile : blueProjectiles) {
-			blueProjectile.update(delta, stateTime);
-			if (blueProjectile.remove)
-				blueProjectilesToRemove.add(blueProjectile);
-		}
-
-		for (BlueProjectile blueProjectile : blueProjectiles) {
-			blueProjectile.render(batch);
-		}
+		drawProjectile(delta);
+		handlePunchCollision();
 
 		terry.update(gameState.player, delta, stateTime);
 		terry.render(batch, gameState.player);
+
+		enemy.update(gameState.enemyPlayer, delta, stateTime);
+		enemy.render(batch, gameState.enemyPlayer);
+
 		batch.end();
 
-		drawShape(gameState.enemyPlayer);
-	}
-
-	void drawShape (Player player) {
-		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-		float x = player.position.x, y = player.position.y, dir = player.dir;
-		State state = player.state;
-
-		// Body.
-		shapeRenderer.setColor(Color.RED);
-		shapeRenderer.rect(x - Player.width / 2, y, Player.width, Player.height);
-
-		// Face.
-		shapeRenderer.setColor(Color.GREEN);
-		shapeRenderer.rect(x + 20 * dir, y + 275, 10 * dir, -10);
-
-		// Arm.
-		shapeRenderer.setColor(Color.WHITE);
-		switch (state) {
-			case idle -> shapeRenderer.rect(x - 30 * dir, y + 200, 30 * dir, -100);
-			case walk -> shapeRenderer.rect(x - 10 * dir, y + 200, 100 * dir, 30);
-			case jumpUp -> shapeRenderer.rect(x - 30 * dir, y + 250, 30 * dir, 100);
-			case jumpFall -> shapeRenderer.rect(x - 30 * dir, y + 230, 30 * dir, -30);
-		}
-
-		shapeRenderer.end();
+		// For Tests purposes only.
+		renderShape(gameState.player.rectangle, Color.RED);
+		renderShape(gameState.enemyPlayer.rectangle, Color.BLUE);
 	}
 
 	public void resize (int width, int height) {
@@ -190,5 +165,100 @@ public class ExampleTerry extends ApplicationAdapter {
 		config.setTitle("Example_Terry");
 		config.setWindowedMode(1600, 900);
 		new Lwjgl3Application(new ExampleTerry(), config);
+	}
+
+	// Private Methods
+
+	private void createTerry () {
+		terry = new Terry(0, 0, 1);
+	}
+
+	private void createEnemy () {
+		enemy = new Terry(0, 0, -1);
+	}
+
+	private void setupFont() {
+		font.getData().setScale(2);
+		glyphLayout = new GlyphLayout();
+	}
+
+	private void drawText(String text, float x, float y, Color color) {
+		font.setColor(color);
+		glyphLayout.setText(font, text);
+		float textWidth = glyphLayout.width;
+		float adjustedX = x;
+		if (x + textWidth >= worldWidth) {
+			adjustedX = x - textWidth;
+		}
+		font.draw(batch, text, adjustedX, y);
+	}
+	// TODO: Refactor into something more generic
+	private void drawProjectile(float delta) {
+		Rectangle projectileBounds = null;
+		if (Gdx.input.isKeyPressed(Keys.R) && timeSinceLastBlueProjectile >= BlueProjectile.COOLDOWN) {
+			if (gameState.player.state.ground()) {
+				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (gameState.player.position.y + 200), gameState.player.dir));
+				timeSinceLastBlueProjectile = 0f;
+				GeneralSounds.BLUE_PROJECTILE.play(false);
+			}
+		}
+
+		Iterator<BlueProjectile> iterator = blueProjectiles.iterator();
+		while (iterator.hasNext()) {
+			BlueProjectile blueProjectile = iterator.next();
+			blueProjectile.update(delta, stateTime);
+			projectileBounds = new Rectangle(blueProjectile.getX(), blueProjectile.getY(), blueProjectile.getWidth(), blueProjectile.getHeight());
+
+			if (projectileBounds.overlaps(gameState.enemyPlayer.rectangle)) {
+				gameState.enemyPlayer.lifeTotal -= BlueProjectile.damage;
+				gameState.enemyPlayer.damageAnimationDuration = 0.30f;
+				gameState.enemyPlayer.state = State.lightDamage;
+
+				iterator.remove(); // Remove projectile safely
+				GeneralSounds.SINGLE_HIT_1.play(false);
+
+				// Exit the loop early as the collision is detected
+				break;
+			}
+		}
+
+// Render remaining projectiles
+		for (BlueProjectile blueProjectile : blueProjectiles) {
+			blueProjectile.render(batch);
+		}
+	}
+
+	// TODO: Refactor this into a `PunchHandler`
+	private void handlePunchCollision() {
+		// Check for punch collision and ensure it triggers only once
+		if (!gameState.player.didHitPunch && gameState.player.rectangle.overlaps(gameState.enemyPlayer.rectangle)
+				&& gameState.player.state == State.punch) {
+			gameState.enemyPlayer.lifeTotal -= 10;
+			gameState.enemyPlayer.damageAnimationDuration = 0.30f;
+			gameState.enemyPlayer.state = State.lightDamage;
+			GeneralSounds.SINGLE_HIT_2.play(false);
+			gameState.player.didHitPunch = true;
+		}
+
+		// Reset the flag if players are no longer in contact or the punch action is completed
+		if (!gameState.player.rectangle.overlaps(gameState.enemyPlayer.rectangle)
+				|| gameState.player.state != State.punch) {
+			gameState.player.didHitPunch = false;
+		}
+	}
+
+	private void setUpEnemyGameState () {
+		gameState.enemyPlayer.state = State.idle;
+		gameState.enemyPlayer.setTintColor(Color.BLUE);
+		gameState.enemyPlayer.dir = -1;
+	}
+
+	// FOR TEST PURPOSES ONLY
+	private void renderShape(Rectangle rectangle, Color color) {
+		ShapeRenderer shapeRenderer = new ShapeRenderer();
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(color);
+		shapeRenderer.rect(rectangle.x, rectangle.y, rectangle.getWidth(), rectangle.getHeight());
+		shapeRenderer.end();
 	}
 }

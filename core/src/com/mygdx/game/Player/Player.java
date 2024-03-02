@@ -1,6 +1,7 @@
 package com.mygdx.game.Player;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class Player {
@@ -13,17 +14,26 @@ public class Player {
     public static final float jumpVelocityX = 450;
     public static final float jumpVelocityY = 950;
 
+    public float lifeTotal = 100;
+
     public Vector2 position;
+    public Rectangle rectangle;
     public Vector2 velocity = new Vector2();
     public int dir = 1;
     public State state = State.idle;
+    public float punchAnimationDuration = 0.15f;
+    public boolean didHitPunch = false;
+    public float landAnimationDuration = 0.15f;
+    public float damageAnimationDuration = 0.30f;
+    private Color tintColor = null;
 
     // Constructor
     public Player(Vector2 position) {
         this.position = position;
+        this.rectangle = new Rectangle(position.x, position.y, 0, 0);
     }
 
-    public void update (float delta) {
+    public void update(float delta, Rectangle boundingRectangle) {
         if (state.ground()) {
             if (state == State.walk) position.x += walkSpeed * delta * dir;
         } else {
@@ -37,6 +47,31 @@ public class Player {
 
         position.x = Math.max(position.x, width / 2);
         position.x = Math.min(position.x, worldWidth - width / 2);
+
+        if (boundingRectangle != null) {
+            rectangle = new Rectangle(boundingRectangle.getX(), boundingRectangle.getY(), boundingRectangle.getWidth(), boundingRectangle.getHeight());
+        }
+    }
+
+    public void update(float delta) {
+        // Call the main update method with default values for boundingRectangle
+        update(delta, null); // Or set default rectangle if needed
+    }
+
+    public float getX() {
+        return position.x;
+    }
+
+    public float getY() {
+        return position.y;
+    }
+
+    public float getWidth() {
+        return rectangle.getWidth();
+    }
+
+    public float getHeight() {
+        return rectangle.getHeight();
     }
 
     void collideX (float delta) {
@@ -62,7 +97,18 @@ public class Player {
             // Landed.
             velocity.set(0, 0);
             position.y = 0;
-            state = State.idle;
+            if (state.air() && state != State.punch && state != State.lightDamage) {
+                state = State.land;
+                landAnimationDuration = 0.15f;
+            }
         }
+    }
+
+    public Color getTintColor() {
+        return tintColor;
+    }
+
+    public void setTintColor(Color tintColor) {
+        this.tintColor = tintColor;
     }
 }

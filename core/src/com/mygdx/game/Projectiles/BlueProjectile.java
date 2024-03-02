@@ -5,9 +5,9 @@ import static com.mygdx.game.Global.batch;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.mygdx.game.Assets.AssetsProjectiles;
-import com.mygdx.game.Characters.Terry;
 
 public class BlueProjectile {
 
@@ -18,9 +18,12 @@ public class BlueProjectile {
 	public static float COOLDOWN = 0.5f; // Set your desired cooldown time in seconds
 	public float stateTime = 0;
 
+	public static float damage = 20f;
+
 	public boolean remove = false;
 
 	public Vector2 position;
+	public Rectangle rectangle;
 
 	public int dir = 1;
 
@@ -31,11 +34,20 @@ public class BlueProjectile {
 		AssetsProjectiles.load();
 		this.position = new Vector2(x, y);
 		this.dir = dir;
+		this.rectangle = new Rectangle(position.x, position.y, 0, 0);
 	}
 
 	public void update(float deltaTime, float stateTime) {
+		update(deltaTime, stateTime, null);
+	}
+
+	public void update(float delta, float stateTime, Rectangle boundingRectangle) {
 		this.stateTime = stateTime;
-		position.x += SPEED * deltaTime;
+		position.x += SPEED * delta;
+
+		if (boundingRectangle != null) {
+			rectangle = new Rectangle(getX(), getY(), boundingRectangle.getWidth(), boundingRectangle.getHeight());
+		}
 
 		if (position.x >= Gdx.graphics.getWidth()) {
 			remove = true;
@@ -45,10 +57,27 @@ public class BlueProjectile {
 	public void render (SpriteBatch batch) {
 		Sprite keyframe = AssetsProjectiles.blueProjectileAnimation.getKeyFrame(stateTime, true);
 		keyframe.setPosition(position.x, position.y);
-		keyframe.setScale(2);
+		keyframe.setScale(1);
+		rectangle = new Rectangle(getX(), getY(), keyframe.getWidth(), keyframe.getHeight());
 		keyframe.setFlip(dir > -1, false);
 
 		keyframe.draw(batch);
+	}
+
+	public float getX() {
+		return position.x;
+	}
+
+	public float getY() {
+		return position.y;
+	}
+
+	public float getWidth() {
+		return rectangle.getWidth();
+	}
+
+	public float getHeight() {
+		return rectangle.getHeight();
 	}
 
 
