@@ -29,6 +29,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.mygdx.game.sound.GeneralSounds;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ExampleTerry extends ApplicationAdapter {
 	static final float worldWidth = 1600, worldHeight = 900;
@@ -41,10 +42,8 @@ public class ExampleTerry extends ApplicationAdapter {
 	ArrayList<BlueProjectile> blueProjectiles;
 	private float timeSinceLastBlueProjectile = 0f;
 	private BitmapFont font;
-
 	private float stateTime;
-
-	private boolean batchEnded;
+	private GlyphLayout glyphLayout;
 
 	public void create () {
 		AssetsTerry.load();
@@ -55,6 +54,7 @@ public class ExampleTerry extends ApplicationAdapter {
 		stateTime = 0f;
 		blueProjectiles = new ArrayList<>();
 		font = new BitmapFont();
+		setupFont();
 		createTerry();
 		createEnemy();
 		setUpEnemyGameState();
@@ -70,6 +70,9 @@ public class ExampleTerry extends ApplicationAdapter {
 				return true;
 			}
 		});
+
+		GeneralSounds.initializeSounds();
+		GeneralSounds.BACKGROUND_MUSIC.playMusic(true);
 	}
 
 	void keyDown (int key) {
@@ -87,10 +90,8 @@ public class ExampleTerry extends ApplicationAdapter {
 			case Keys.Q -> {
 			// TODO: Handle inputs here
 				if (gameState.player.state.ground()) {
-					// Start the punch animation
 					gameState.player.state = State.punch;
 					gameState.player.punchAnimationDuration = 0.15f;
-
 				}
 			}
 		}
@@ -141,8 +142,6 @@ public class ExampleTerry extends ApplicationAdapter {
 		enemy.update(gameState.enemyPlayer, delta, stateTime);
 		enemy.render(batch, gameState.enemyPlayer);
 
-
-
 		batch.end();
 
 		// For Tests purposes only.
@@ -178,11 +177,15 @@ public class ExampleTerry extends ApplicationAdapter {
 		enemy = new Terry(0, 0, -1);
 	}
 
+	private void setupFont() {
+		font.getData().setScale(2);
+		glyphLayout = new GlyphLayout();
+	}
+
 	private void drawText(String text, float x, float y, Color color) {
 		font.setColor(color);
-		font.getData().setScale(2);
-		GlyphLayout layout = new GlyphLayout(font, text);
-		float textWidth = layout.width;
+		glyphLayout.setText(font, text);
+		float textWidth = glyphLayout.width;
 		float adjustedX = x;
 		if (x + textWidth >= worldWidth) {
 			adjustedX = x - textWidth;
@@ -196,27 +199,30 @@ public class ExampleTerry extends ApplicationAdapter {
 			if (gameState.player.state.ground()) {
 				blueProjectiles.add(new BlueProjectile(gameState.player.position.x, (gameState.player.position.y + 200), gameState.player.dir));
 				timeSinceLastBlueProjectile = 0f;
-				GeneralSounds.BLUE_PROJECTILE.play();
+				GeneralSounds.BLUE_PROJECTILE.play(false);
 			}
 		}
 
-		ArrayList<BlueProjectile> blueProjectilesToRemove = new ArrayList<BlueProjectile>();
-		for (BlueProjectile blueProjectile : blueProjectiles) {
+		Iterator<BlueProjectile> iterator = blueProjectiles.iterator();
+		while (iterator.hasNext()) {
+			BlueProjectile blueProjectile = iterator.next();
 			blueProjectile.update(delta, stateTime);
 			projectileBounds = new Rectangle(blueProjectile.getX(), blueProjectile.getY(), blueProjectile.getWidth(), blueProjectile.getHeight());
 
 			if (projectileBounds.overlaps(gameState.enemyPlayer.rectangle)) {
-				gameState.enemyPlayer.lifeTotal = gameState.enemyPlayer.lifeTotal - BlueProjectile.damage;
-				blueProjectile.remove = true;
-				GeneralSounds.SINGLE_HIT_1.play();
-			}
+				gameState.enemyPlayer.lifeTotal -= BlueProjectile.damage;
+				gameState.enemyPlayer.damageAnimationDuration = 0.30f;
+				gameState.enemyPlayer.state = State.lightDamage;
 
-			if (blueProjectile.remove)
-				blueProjectilesToRemove.add(blueProjectile);
+				iterator.remove(); // Remove projectile safely
+				GeneralSounds.SINGLE_HIT_1.play(false);
+
+				// Exit the loop early as the collision is detected
+				break;
+			}
 		}
 
-		blueProjectiles.removeAll(blueProjectilesToRemove);
-
+// Render remaining projectiles
 		for (BlueProjectile blueProjectile : blueProjectiles) {
 			blueProjectile.render(batch);
 		}
@@ -228,7 +234,9 @@ public class ExampleTerry extends ApplicationAdapter {
 		if (!gameState.player.didHitPunch && gameState.player.rectangle.overlaps(gameState.enemyPlayer.rectangle)
 				&& gameState.player.state == State.punch) {
 			gameState.enemyPlayer.lifeTotal -= 10;
-			GeneralSounds.SINGLE_HIT_2.play();
+			gameState.enemyPlayer.damageAnimationDuration = 0.30f;
+			gameState.enemyPlayer.state = State.lightDamage;
+			GeneralSounds.SINGLE_HIT_2.play(false);
 			gameState.player.didHitPunch = true;
 		}
 

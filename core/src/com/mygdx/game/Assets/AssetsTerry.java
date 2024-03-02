@@ -7,17 +7,15 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.mygdx.game.Characters.Terry;
 
 public class AssetsTerry {
-
     public static TextureAtlas idleAtlas;
     public static TextureAtlas walkingAtlas;
     public static TextureAtlas idleSingleAtlas;
     public static TextureAtlas jumpUpAtlas;
     public static TextureAtlas fallingAtlas;
     public static TextureAtlas landAtlas;
-
     public static TextureAtlas punchComboAtlas;
-    // Punches
     public static TextureAtlas lightPunch1Atlas;
+    public static TextureAtlas damageComboAtlas;
     public static Sprite idle;
     public static Sprite jumpUp;
     public static Sprite falling;
@@ -25,8 +23,8 @@ public class AssetsTerry {
     public static Animation<Sprite> idleAnimation;
     public static Animation<Sprite> walkingAnimation;
     public static Animation<Sprite> lightPunch1Animation;
-
     public static Animation<Sprite> punchComboAnimation;
+    public static Animation<Sprite> damageComboAnimation;
 
     public static void load() {
         // Idle
@@ -60,6 +58,9 @@ public class AssetsTerry {
         punchComboAtlas = new TextureAtlas(Gdx.files.internal("Sprites/terry_bogard/punch/punchCombo.atlas"));
         punchComboAnimation = new Animation<Sprite>(Terry.FRAME_DURATION, punchComboAtlas.createSprites("Terry Bogard"), Animation.PlayMode.LOOP);
 
+        // Damage
+        damageComboAtlas = new TextureAtlas(Gdx.files.internal("Sprites/terry_bogard/damage/damage_from_combo.atlas"));
+        damageComboAnimation = new Animation<Sprite>(Terry.FRAME_DURATION, damageComboAtlas.createSprites("Terry Bogard"), Animation.PlayMode.LOOP);
     }
 
     public static void dispose() {
@@ -71,5 +72,6 @@ public class AssetsTerry {
         lightPunch1Atlas.dispose();
         landAtlas.dispose();
         punchComboAtlas.dispose();
+        damageComboAtlas.dispose();
     }
 }

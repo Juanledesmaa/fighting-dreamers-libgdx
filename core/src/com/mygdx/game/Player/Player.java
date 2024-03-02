@@ -21,11 +21,10 @@ public class Player {
     public Vector2 velocity = new Vector2();
     public int dir = 1;
     public State state = State.idle;
-
     public float punchAnimationDuration = 0.15f;
     public boolean didHitPunch = false;
     public float landAnimationDuration = 0.15f;
-
+    public float damageAnimationDuration = 0.30f;
     private Color tintColor = null;
 
     // Constructor
@@ -98,7 +97,7 @@ public class Player {
             // Landed.
             velocity.set(0, 0);
             position.y = 0;
-            if (state.air() && state != State.punch) {
+            if (state.air() && state != State.punch && state != State.lightDamage) {
                 state = State.land;
                 landAnimationDuration = 0.15f;
             }

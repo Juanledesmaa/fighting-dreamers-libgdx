@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 
 public enum GeneralSounds {
 	BACKGROUND_MUSIC("Music/Calling.mp3"),
-	BLUE_PROJECTILE("Sounds/Projectile/CD_00150.wav"),
+	BLUE_PROJECTILE("Sounds/Projectile/Fire Burnt.wav"),
 	SINGLE_HIT_1("Sounds/Hit/single_1.wav"),
 	SINGLE_HIT_2("Sounds/Hit/single_2.wav"),
 	SINGLE_HIT_3("Sounds/Hit/single_3.wav");

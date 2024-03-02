@@ -1,7 +1,7 @@
 package com.mygdx.game.Player;
 
 public enum State {
-    idle, walk, jumpUp, jumpFall, punch, land;
+    idle, walk, jumpUp, jumpFall, punch, land, lightDamage;
 
     public enum punchCombo {
         NONE, // No combo
