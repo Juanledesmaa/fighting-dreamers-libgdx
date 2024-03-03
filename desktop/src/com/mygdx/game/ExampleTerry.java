@@ -2,6 +2,7 @@
 package com.mygdx.game;
 
 import static com.mygdx.game.Global.batch;
+import static com.mygdx.game.Global.polygonBatch;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -13,14 +14,13 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.mygdx.game.Assets.AssetsProjectiles;
-import com.mygdx.game.Assets.AssetsTerry;
+import com.mygdx.game.Characters.SpineBoy;
 import com.mygdx.game.Characters.Terry;
 import com.mygdx.game.Player.Player;
 import com.mygdx.game.Player.State;
@@ -38,6 +38,7 @@ public class ExampleTerry extends ApplicationAdapter {
 	GameState gameState = new GameState();
 	Terry terry;
 	Terry enemy;
+	SpineBoy spineBoy;
 	Texture img;
 	ArrayList<BlueProjectile> blueProjectiles;
 	private float timeSinceLastBlueProjectile = 0f;
@@ -46,17 +47,17 @@ public class ExampleTerry extends ApplicationAdapter {
 	private GlyphLayout glyphLayout;
 
 	public void create () {
-		AssetsTerry.load();
-		AssetsProjectiles.load();
 		img = new Texture("Backgrounds/stages/figher_background.jpg");
 		shapeRenderer = new ShapeRenderer();
 		batch = new SpriteBatch();
+		polygonBatch = new PolygonSpriteBatch();
 		stateTime = 0f;
 		blueProjectiles = new ArrayList<>();
 		font = new BitmapFont();
 		setupFont();
 		createTerry();
 		createEnemy();
+		createSpineBoy();
 		setUpEnemyGameState();
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
@@ -113,6 +114,7 @@ public class ExampleTerry extends ApplicationAdapter {
 			if (gameState.player.state.ground()) {
 				gameState.player.state = State.walk;
 				gameState.player.dir = 1;
+				gameState.playerSpineboy.state = State.walk;
 			}
 		}
 		if (Gdx.input.isKeyPressed(Keys.UP)) {
@@ -125,6 +127,11 @@ public class ExampleTerry extends ApplicationAdapter {
 
 		gameState.player.update(delta, terry.getAccurateRectangle());
 		gameState.enemyPlayer.update(delta, enemy.getAccurateRectangle());
+		gameState.playerSpineboy.update(delta);
+
+		spineBoy.animationState.update(delta);
+		spineBoy.animationState.apply(spineBoy.skeleton);
+		spineBoy.skeleton.updateWorldTransform();
 
 		batch.begin();
 		batch.draw(img, 0, 0);
@@ -142,6 +149,8 @@ public class ExampleTerry extends ApplicationAdapter {
 		enemy.update(gameState.enemyPlayer, delta, stateTime);
 		enemy.render(batch, gameState.enemyPlayer);
 
+		spineBoy.update(gameState.playerSpineboy, delta, stateTime);
+		spineBoy.render(batch, gameState.playerSpineboy);
 		batch.end();
 
 		// For Tests purposes only.
@@ -157,6 +166,7 @@ public class ExampleTerry extends ApplicationAdapter {
 	static class GameState {
 		Player player = new Player(new Vector2(200, 0));
 		Player enemyPlayer = new Player(new Vector2(worldWidth - Player.width, 0));
+		Player playerSpineboy = new Player(new Vector2(800, 0));
 	}
 
 	static public void main (String[] arg) {
@@ -171,6 +181,11 @@ public class ExampleTerry extends ApplicationAdapter {
 
 	private void createTerry () {
 		terry = new Terry(0, 0, 1);
+	}
+
+	private void createSpineBoy () {
+		spineBoy = new SpineBoy(0, 0, 1);
+		spineBoy.animationState.setAnimation(0, "idle", true);
 	}
 
 	private void createEnemy () {
@@ -222,7 +237,7 @@ public class ExampleTerry extends ApplicationAdapter {
 			}
 		}
 
-// Render remaining projectiles
+		// Render remaining projectiles
 		for (BlueProjectile blueProjectile : blueProjectiles) {
 			blueProjectile.render(batch);
 		}
