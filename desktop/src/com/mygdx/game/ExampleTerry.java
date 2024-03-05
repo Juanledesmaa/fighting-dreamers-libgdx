@@ -27,6 +27,8 @@ import com.mygdx.game.Player.State;
 import com.mygdx.game.Projectiles.BlueProjectile;
 import com.badlogic.gdx.math.Rectangle;
 import com.mygdx.game.sound.GeneralSounds;
+import com.mygdx.game.utils.CountdownTimer;
+import com.mygdx.game.utils.HealthBar;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -45,6 +47,9 @@ public class ExampleTerry extends ApplicationAdapter {
 	private BitmapFont font;
 	private float stateTime;
 	private GlyphLayout glyphLayout;
+	private CountdownTimer countdownTimer;
+	private HealthBar healthBar;
+	private HealthBar enemyHealthBar;
 
 	public void create () {
 		img = new Texture("Backgrounds/stages/figher_background.jpg");
@@ -53,12 +58,14 @@ public class ExampleTerry extends ApplicationAdapter {
 		polygonBatch = new PolygonSpriteBatch();
 		stateTime = 0f;
 		blueProjectiles = new ArrayList<>();
-		font = new BitmapFont();
-		setupFont();
+		font = new BitmapFont(Gdx.files.internal("Fonts/presstart.fnt"));
+		setUpFont();
 		createTerry();
 		createEnemy();
-		createSpineBoy();
+//		createSpineBoy();
 		setUpEnemyGameState();
+		setUpCountDownTimer();
+		createHealthBars();
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			public boolean keyDown (int key) {
@@ -129,9 +136,9 @@ public class ExampleTerry extends ApplicationAdapter {
 		gameState.enemyPlayer.update(delta, enemy.getAccurateRectangle());
 		gameState.playerSpineboy.update(delta);
 
-		spineBoy.animationState.update(delta);
-		spineBoy.animationState.apply(spineBoy.skeleton);
-		spineBoy.skeleton.updateWorldTransform();
+//		spineBoy.animationState.update(delta);
+//		spineBoy.animationState.apply(spineBoy.skeleton);
+//		spineBoy.skeleton.updateWorldTransform();
 
 		batch.begin();
 		batch.draw(img, 0, 0);
@@ -139,6 +146,9 @@ public class ExampleTerry extends ApplicationAdapter {
 		// Draw text at position (x,y)
 		drawText("Life: " + gameState.player.lifeTotal, 50, 850, Color.WHITE);
 		drawText("Life: " + gameState.enemyPlayer.lifeTotal, worldWidth - 50, 850, Color.WHITE);
+
+		healthBar.setHealthPercentage(healthBar.getLifePercentage(gameState.player.lifeTotal));
+		enemyHealthBar.setHealthPercentage(enemyHealthBar.getLifePercentage(gameState.enemyPlayer.lifeTotal));
 
 		drawProjectile(delta);
 		handlePunchCollision();
@@ -149,13 +159,15 @@ public class ExampleTerry extends ApplicationAdapter {
 		enemy.update(gameState.enemyPlayer, delta, stateTime);
 		enemy.render(batch, gameState.enemyPlayer);
 
-		spineBoy.update(gameState.playerSpineboy, delta, stateTime);
-		spineBoy.render(batch, gameState.playerSpineboy);
+//		spineBoy.update(gameState.playerSpineboy, delta, stateTime);
+//		spineBoy.render(batch, gameState.playerSpineboy);
+		countdownTimer.update();
 		batch.end();
 
 		// For Tests purposes only.
 		renderShape(gameState.player.rectangle, Color.RED);
 		renderShape(gameState.enemyPlayer.rectangle, Color.BLUE);
+		renderHealthBars();
 	}
 
 	public void resize (int width, int height) {
@@ -183,17 +195,27 @@ public class ExampleTerry extends ApplicationAdapter {
 		terry = new Terry(0, 0, 1);
 	}
 
-	private void createSpineBoy () {
-		spineBoy = new SpineBoy(0, 0, 1);
-		spineBoy.animationState.setAnimation(0, "idle", true);
-	}
+//	private void createSpineBoy () {
+//		spineBoy = new SpineBoy(0, 0, 1);
+//		spineBoy.animationState.setAnimation(0, "idle", true);
+//	}
 
 	private void createEnemy () {
 		enemy = new Terry(0, 0, -1);
 	}
 
-	private void setupFont() {
-		font.getData().setScale(2);
+	private void createHealthBars() {
+		healthBar = new HealthBar(gameState.player.lifeTotal, 50, Global.worldHeight - 130, 500, 30);
+		enemyHealthBar = new HealthBar(gameState.enemyPlayer.lifeTotal,Global.worldWidth - 550, Global.worldHeight - 130, 500, 30);
+	}
+
+	private void setUpCountDownTimer() {
+		countdownTimer = new CountdownTimer(100000, font, batch);
+		countdownTimer.start();
+	}
+
+	private void setUpFont() {
+		font.getData().setScale(1);
 		glyphLayout = new GlyphLayout();
 	}
 
@@ -266,6 +288,14 @@ public class ExampleTerry extends ApplicationAdapter {
 		gameState.enemyPlayer.state = State.idle;
 		gameState.enemyPlayer.setTintColor(Color.BLUE);
 		gameState.enemyPlayer.dir = -1;
+	}
+
+	private void renderHealthBars() {
+		ShapeRenderer shapeRenderer = new ShapeRenderer();
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		healthBar.draw(shapeRenderer);
+		enemyHealthBar.draw(shapeRenderer);
+		shapeRenderer.end();
 	}
 
 	// FOR TEST PURPOSES ONLY

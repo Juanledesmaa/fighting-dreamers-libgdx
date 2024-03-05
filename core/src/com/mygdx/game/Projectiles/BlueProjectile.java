@@ -18,7 +18,7 @@ public class BlueProjectile {
 	public static float COOLDOWN = 0.5f; // Set your desired cooldown time in seconds
 	public float stateTime = 0;
 
-	public static float damage = 20f;
+	public static float damage = 10f;
 
 	public boolean remove = false;
 
